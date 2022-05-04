@@ -1,0 +1,8 @@
+body {
+  width: max-content;
+  min-height: 200px;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}

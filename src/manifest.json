@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Premint+",
+  "key": "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCs2Twhth1oGsTfC6MDA0Ra2zqr2r+rmDZYAjp7sejUblVRQLqWeWl4Yhz5DotDeGajX0SiK1hTG70NlBhIuekL/m0QZzvQyaJvaPowmB8MMJc/FksCz3liXvQUr2wyHb+xA99TJZa8WQX7vWGrk4CgG115Rtv2KlV1lPNsRQWHn18Z7bZh9Gt+3BZisDPZdAji2fAGLw0ehtoy+vOfmGvlHIiy73QKunlK1b7qmhBiIz4vKQAj8nG+UY+QcteArFlvsFG4jXnFoCapa2UqgySdxhFn2t3UcYWCefEYkbdEsKGgqQlShKxmv449eZSwv2gI130Q+SKGQSl+ilXon7kRAgMBAAECggEAHpS0odZBr6iEyl2Zsq/CSTzeTYd/P9HHU5zZUgcxBVyb9as5F+RVN7pMG/hpxT8pEaCKWRLIJrQSp7Na9IsH41pZW3yYRaFW/tUY5r4TSCnUqJG+JbolZLUeBAbhYqCGyL/BpElTOPGbMGXaQOvw5uLQj+NsiUoGIq5+vtobV1oczyizABf+mozkg9HCKVrjpWWnVA5dJoZoCPaEmFE1P0M6VhVcXORjV/ItTVpB1AwTZHIwKADXTSryxAguCYrCieslqyyVtTjLol0oZY+ZieKZhdaiu9G9l/suK3FjFnP1nywMrCzuOhf9OV8+pMN6B+B0jXIXRi/85wQhX+/KvQKBgQDzz8edzG5sylllMdQAH2XSmY4R5blndYzB4U/pkdq6l6PJaV92x7UXbGrgBPDNI4cz74QVL5POFG47odit5EpHjpwOIgvCjuie0p9Za20ilwmq5gnPMfZgoQxJPzvQYowKV9hD1iDXi6LHXh/zj1WzFh2pYmArZWEo2GUHNFPMwwKBgQC1fUsePaEMOiml7+vbKuActo5fxy5UPLEXVuN1pVBp6ZmnK7gS7/H4WS81iyCG0fD9AxeaKkkP2RYWd0qRbhbHynpMPE99X1SIrK0H6TY33XI1LJFvuc65XVDRXWWQ3n+6sgbYVgEWba/KWlbH7Bc55Z9js7/rAE2vuzU3pyJVmwKBgAMKFxH3h3ThvOWPDnaF7a4Hbgb5FyucAoo0NdvSjqh+1XLgVmlTqgVFu7tZNGtKQxg5pyrgcfZCuPETXnEkhGyJ8ZYXhJADWhEIzSW/OhgRS/SOc5bap5iiyVVsbWF2qQpD+BU4aSZmvjvAB6PwqH/YCbyf1lUUKXbp47CITXcjAoGAVUNQuBtR/tGQYXHOx39kHHkzeBG2VULSG9npMIsCtU9WrW/foZ3yeq9De48qL8yPv/3k57t36aceNl3CvYIP17rrK8elvIu9xhwBilbo7uPtVMfkZ63OTc1mO4X6Qk4Vids7VgVJq4TKcnFwlan3225iLE/1GO1ike2MeeHeQoMCgYBisEd7J5e4hdRb++XdJ04np+jhZBdvLoLdqe1yn/HiPULNs+COaz93tDTks6GTKd6KIrb51Lp0TuhiqxrOA6TwPeHp2rFnPqQCGk1n3h/7uz1uoilQiuJ/zMureTpJADxdG0qlXAy/gL6NecIY8dsKWE18gOSAs0nnE6liaTCA9A==",
+  "description": "A chrome extension to make your premint life easier.",
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon-34.png"
+  },
+  "icons": {
+    "128": "icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.premint.xyz/*"
+      ],
+      "exclude_matches": [
+        "https://www.premint.xyz/collectors/*",
+        "https://www.premint.xyz/dashboard/*"
+      ],
+      "js": [
+        "premint.bundle.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icon-128.png",
+        "icon-34.png"
+      ],
+      "matches": []
+    }
+  ]
+}
