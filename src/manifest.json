@@ -14,31 +14,22 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": [
-    "storage",
-    "alarms"
-  ],
+  "permissions": ["storage", "alarms"],
   "content_scripts": [
     {
-      "matches": [
-        "https://www.premint.xyz/*"
-      ],
+      "matches": ["https://www.premint.xyz/*"],
       "exclude_matches": [
         "https://www.premint.xyz/collectors/*",
-        "https://www.premint.xyz/dashboard/*"
+        "https://www.premint.xyz/dashboard/*",
+        "https://www.premint.xyz/profile/*"
       ],
-      "js": [
-        "premint.bundle.js"
-      ],
+      "js": ["premint.bundle.js"],
       "run_at": "document_end"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "icon-128.png",
-        "icon-34.png"
-      ],
+      "resources": ["icon-128.png", "icon-34.png"],
       "matches": []
     }
   ]
