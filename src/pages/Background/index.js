@@ -67,7 +67,6 @@ chrome.alarms.onAlarm.addListener(() => {
           }
           draft.raffles[url].status = matchedStatus;
           draft.raffles[url].updated_at = Date.now();
-          draft.loaded = true;
 
           if (autoDeleteLost && matchedStatus === 'lost') {
             delete draft.raffles[url];

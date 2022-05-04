@@ -12,7 +12,11 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 const queryClient = new QueryClient();
 
 function AddToWatchlist() {
-  const { storageData: settings, setStorageData, isLoading } = useSettingsStore();
+  const {
+    storageData: settings,
+    setStorageData,
+    isLoading,
+  } = useSettingsStore();
   const { wallet } = settings;
 
   const statusIcons: {
@@ -58,6 +62,23 @@ function AddToWatchlist() {
       console.log(`ERROR: Could not retrieve Premint status for ${url}`);
     }
 
+    useEffect(() => {
+      if (
+        settings?.raffles.hasOwnProperty(url) &&
+        data?.status &&
+        settings?.raffles[url]?.status !== data?.status
+      ) {
+        const newSettings = produce(settings, (draft) => {
+          draft.raffles[url] = {
+            ...draft.raffles[url],
+            status: data?.status,
+            updated_at: Date.now(),
+          };
+        });
+        setStorageData(newSettings);
+      }
+    }, [data?.status, settings, url]);
+
     function handleAdd() {
       const status: RaffleData['status'] =
         data?.status ||
@@ -69,6 +90,7 @@ function AddToWatchlist() {
           window?.document?.querySelector('.card .card-body div:nth-child(2)')
             ?.textContent || 'unknown'
         ];
+
       const infoDivs =
         window?.document
           ?.querySelector('.container .row div:nth-child(2) div')
@@ -83,7 +105,6 @@ function AddToWatchlist() {
           ?.parentElement?.querySelector('a')?.href || '';
 
       const newSettings = produce(settings, (draft) => {
-        draft.loaded = true;
         draft.raffles[url] = {
           name:
             window?.document
@@ -135,7 +156,9 @@ function AddToWatchlist() {
         <br />
         <span className="badge badge-lg text-md z-depth-2-top">
           <i
-            className={`fas ${statusIcons[status || 'unknown'].icon} ${statusIcons[status || 'unknown'].color} mr-2`}
+            className={`fas ${statusIcons[status || 'unknown'].icon} ${
+              statusIcons[status || 'unknown'].color
+            } mr-2`}
           ></i>
           <button
             onClick={handleAdd}

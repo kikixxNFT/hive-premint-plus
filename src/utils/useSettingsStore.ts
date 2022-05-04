@@ -17,7 +17,6 @@ export type RaffleData = {
 export type Settings = {
   colorScheme: ColorScheme;
   interval: number;
-  loaded?: boolean;
   wallet?: string;
   autoDeleteLost?: boolean;
   autoWatchOnRegister?: boolean;
@@ -57,15 +56,15 @@ export function setData(data: Settings) {
 }
 
 export const useSettingsStore = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [settings, setSettings] = useState(INITIAL_VALUE)
+  const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState(INITIAL_VALUE);
 
   useEffect(() => {
     async function fetchSettings() {
       setIsLoading(true);
       const data = await getData();
+      setSettings(data);
       setIsLoading(false);
-      setSettings(data)
     }
     fetchSettings();
   }, []);
