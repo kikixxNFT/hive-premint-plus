@@ -10,6 +10,7 @@ import { useSettingsStore } from '@utils/useSettingsStore';
 import { NotificationsProvider } from '@mantine/notifications';
 import { Header } from '@components/Header';
 import { OptionsForm } from './components/OptionsForm';
+import { ConnectWallet } from './components/ConnectWallet';
 
 const Options = () => {
   const {
@@ -18,7 +19,7 @@ const Options = () => {
     isLoading,
   } = useSettingsStore();
 
-  const { colorScheme } = settings;
+  const { wallet, colorScheme } = settings;
   const toggleColorScheme = (value?: ColorScheme) => {
     setStorageData({
       ...settings,
@@ -50,6 +51,11 @@ const Options = () => {
           >
             {isLoading ? (
               <Loader color="violet" />
+            ) : !wallet ? (
+              <ConnectWallet
+                setStorageData={setStorageData}
+                settings={settings}
+              />
             ) : (
               <OptionsForm
                 setStorageData={setStorageData}
