@@ -26,7 +26,7 @@ const Popup = () => {
     isLoading,
   } = settings;
   const [selectedWallet, setSelectedWallet] = useState(previousSelectedWallet);
-  const wallet = wallets?.[selectedWallet].wallet || '';
+  const wallet = wallets?.[selectedWallet]?.wallet || '';
 
   useEffect(() => {
     if (!isLoading) {
