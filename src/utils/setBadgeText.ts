@@ -1,7 +1,21 @@
-import { Settings } from '@utils/useSettingsStore';
+import { Settings } from '@utils/createSyncedStorageAtom';
 
-export const setBadgeText = ({ raffles }: { raffles: Settings['raffles'] }) => {
-    const won = Object.entries(raffles).filter(([, raffle]) => raffle.status === 'won')
-    chrome.action.setBadgeBackgroundColor({ color: '#F03E3E' })
-    chrome.action.setBadgeText({ text: `${won.length || ""}` })
-}
+export const setBadgeText = ({
+  raffles,
+  selectedWallet,
+  wallet,
+}: {
+  raffles: Settings['raffles'];
+  selectedWallet: number;
+  wallet: string;
+}) => {
+  const won =
+    raffles?.[wallet] &&
+    Object.entries(raffles[wallet]).filter(
+      ([, raffle]) => raffle.status === 'won'
+    );
+  chrome.action.setBadgeBackgroundColor({
+    color: won?.length ? '#AF8700' : '#707070',
+  });
+  chrome.action.setBadgeText({ text: String(selectedWallet + 1) });
+};

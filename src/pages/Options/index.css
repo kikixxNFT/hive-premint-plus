@@ -8,5 +8,7 @@ body {
 #app-container {
   width: 100vw;
   height: 100vh;
+  display: grid;
+  grid-template-rows: 56px 1fr;
+  grid-template-columns: minmax(300px, 400px) 1fr;
 }
-  

@@ -33,8 +33,11 @@ export function Header({
 
   return (
     <Navbar
-      sx={{ position: 'absolute' }}
-      height="fit-content"
+      sx={{
+        height: 'fit-content',
+        gridColumn: 1 / 3,
+        width: '100vw',
+      }}
       pt="xs"
       pl="xs"
       pr="xs"
