@@ -1,7 +1,6 @@
 import { useFieldArray, useForm } from 'react-hook-form';
-import { Settings } from '@utils/useSettingsStore';
 import { showNotification } from '@mantine/notifications';
-import { CircleCheck } from 'tabler-icons-react';
+import { CircleCheck, Plus, Minus } from 'tabler-icons-react';
 import React, { useState } from 'react';
 import {
   TextInput,
@@ -17,10 +16,11 @@ import {
   Divider,
   Title,
   ScrollArea,
+  ActionIcon,
 } from '@mantine/core';
+import { useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
 
 type FormValues = {
-  pass_wallet: string;
   wallets: {
     wallet: string;
   }[];
@@ -29,22 +29,22 @@ type FormValues = {
   autoWatchOnRegister: boolean;
 };
 
-export function OptionsForm({
-  setStorageData,
-  settings,
-}: {
-  setStorageData: (data: Settings) => void;
-  settings: Settings;
-}) {
+export function OptionsForm() {
+  const [settings, setSettings] = useSyncedStorageAtom();
   const [opened, setOpened] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const { wallet, interval, autoDeleteLost, autoWatchOnRegister, colorScheme } =
-    settings;
+  const {
+    wallet,
+    wallets,
+    interval,
+    autoDeleteLost,
+    autoWatchOnRegister,
+    colorScheme,
+  } = settings;
   const theme = useMantineTheme();
   const { register, handleSubmit, formState, control } = useForm<FormValues>({
     defaultValues: {
-      pass_wallet: wallet,
-      wallets: [{ wallet: '' }],
+      wallets: wallets || [{ wallet }],
       interval,
       autoDeleteLost,
       autoWatchOnRegister,
@@ -58,7 +58,7 @@ export function OptionsForm({
   const { errors, isSubmitting } = formState;
 
   async function onSubmit(values: FormValues) {
-    setStorageData({ ...settings, ...values });
+    setSettings({ ...settings, ...values });
     showNotification({
       id: 'saved-data',
       title: 'Success!',
@@ -93,6 +93,7 @@ export function OptionsForm({
             colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.dark[7]
           }`,
           borderRadius: '6px',
+          height: '100%',
         }}
         onSubmit={handleSubmit(onSubmit)}
       >
@@ -101,18 +102,8 @@ export function OptionsForm({
           label="Hive Alpha Wallet"
           placeholder="0x..."
           radius="md"
-          sx={{
-            input: {
-              borderColor: errors.pass_wallet ? 'red' : 'inherit',
-            },
-          }}
-          {...register('pass_wallet')}
+          value={wallet}
         />
-        {errors.pass_wallet && (
-          <Text sx={{ color: 'red', fontSize: '12px', lineHeight: 1 }}>
-            {errors.pass_wallet.message}
-          </Text>
-        )}
         <Divider />
         <Box
           sx={{
@@ -122,8 +113,8 @@ export function OptionsForm({
           }}
         >
           <Title order={4}>Wallets</Title>
-          <Group position="right">
-            <Button
+          <Group pr="12px" position="right">
+            <ActionIcon
               variant="outline"
               size="xs"
               color="grape"
@@ -132,15 +123,11 @@ export function OptionsForm({
                 append({ wallet: '' });
               }}
             >
-              {'+'}
-            </Button>
+              <Plus size={16} />
+            </ActionIcon>
           </Group>
         </Box>
-        <ScrollArea
-          offsetScrollbars
-          type="hover"
-          sx={{ height: 'minmax(fit-content, 255px)' }}
-        >
+        <ScrollArea offsetScrollbars type="hover" sx={{ maxHeight: '210px' }}>
           <List spacing="xs">
             {fields.map((item, index) => {
               return (
@@ -157,19 +144,25 @@ export function OptionsForm({
                       placeholder="0x..."
                       radius="md"
                       required
+                      sx={{
+                        input: {
+                          width: '28ch',
+                          marginRight: '10px',
+                        },
+                      }}
                       {...register(`wallets.${index}.wallet` as const, {
                         required: true,
                       })}
                     />
-                    <Button
-                      sx={{ marginBottom: '4px' }}
+                    <ActionIcon
+                      sx={{ marginBottom: '10px' }}
                       variant="outline"
                       size="xs"
                       type="button"
                       onClick={() => remove(index)}
                     >
-                      {'-'}
-                    </Button>
+                      <Minus size={16} />
+                    </ActionIcon>
                   </Box>
                 </List.Item>
               );

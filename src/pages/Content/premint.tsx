@@ -1,23 +1,20 @@
 import React, { useEffect } from 'react';
 import { render } from 'react-dom';
 import { produce } from 'immer';
-import {
-  useSettingsStore,
-  Settings,
-  RaffleData,
-} from '@utils/useSettingsStore';
 import { statuses, useGetPremintStatus } from '@utils/useGetPremintStatus';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import {
+  createSyncedStorageAtom,
+  RaffleData,
+  useSyncedStorageAtom,
+} from '@utils/createSyncedStorageAtom';
 
 const queryClient = new QueryClient();
+createSyncedStorageAtom();
 
 function AddToWatchlist() {
-  const {
-    storageData: settings,
-    setStorageData,
-    isLoading,
-  } = useSettingsStore();
-  const { wallet } = settings;
+  const [settings, setSettings] = useSyncedStorageAtom();
+  const { wallets, selectedWallet } = settings;
 
   const statusIcons: {
     [status in RaffleData['status']]: { [key: string]: string };
@@ -44,19 +41,17 @@ function AddToWatchlist() {
     },
   };
 
-  function GetPremintData({
-    wallet,
-    settings,
-  }: {
-    wallet: string;
-    settings: Settings;
-  }) {
+  function GetPremintData() {
     const url = `${window.location.origin}/${
       window.location.pathname.split('/')[1]
     }`;
-    const { data, isError } = useGetPremintStatus({ url, wallet });
+    const wallet = wallets?.[selectedWallet || 0]?.wallet || '';
+    const status = settings?.raffles[wallet]?.[url]?.status;
+    const { data, isError } = useGetPremintStatus({
+      url,
+      wallet,
+    });
     const { autoWatchOnRegister } = settings;
-    const status = settings?.raffles[url]?.status;
 
     if (isError) {
       console.log(`ERROR: Could not retrieve Premint status for ${url}`);
@@ -64,22 +59,22 @@ function AddToWatchlist() {
 
     useEffect(() => {
       if (
-        settings?.raffles.hasOwnProperty(url) &&
         data?.status &&
-        settings?.raffles[url]?.status !== data?.status
+        settings?.raffles?.[wallet].hasOwnProperty(url) &&
+        settings?.raffles?.[wallet]?.[url]?.status !== data?.status
       ) {
         const newSettings = produce(settings, (draft) => {
-          draft.raffles[url] = {
-            ...draft.raffles[url],
+          draft.raffles[wallet][url] = {
+            ...draft.raffles[wallet][url],
             status: data?.status,
             updated_at: Date.now(),
           };
         });
-        setStorageData(newSettings);
+        setSettings(newSettings);
       }
-    }, [data?.status, settings, url]);
+    }, [data?.status, url, wallet]);
 
-    function handleAdd() {
+    async function handleAdd() {
       const status: RaffleData['status'] =
         data?.status ||
         (window?.document
@@ -105,42 +100,47 @@ function AddToWatchlist() {
           ?.parentElement?.querySelector('a')?.href || '';
 
       const newSettings = produce(settings, (draft) => {
-        draft.raffles[url] = {
+        draft.raffles[wallet][url] = {
           name:
             window?.document
               ?.querySelector('.container .row div:nth-child(1) h1')
               ?.textContent?.trim() || url,
           status,
           updated_at: Date.now(),
+          created_at: Date.now(),
         };
 
         for (let info of Array.from(infoDivs)) {
           const [cardTitle, cardValue] = info.innerText.split('\n');
           if (cardTitle === 'Official Link') {
-            draft.raffles[url].official_link = cardValue.trim();
+            draft.raffles[wallet][url].official_link = cardValue.trim();
           }
           if (cardTitle === 'Registration Closes') {
-            draft.raffles[url].registration_closes = cardValue.trim();
+            draft.raffles[wallet][url].registration_closes = cardValue.trim();
           }
           if (cardTitle === 'Mint Date') {
-            draft.raffles[url].mint_date = cardValue.trim();
+            draft.raffles[wallet][url].mint_date = cardValue.trim();
           }
           if (cardTitle === 'Mint Price') {
-            draft.raffles[url].mint_price = cardValue.trim();
+            draft.raffles[wallet][url].mint_price = cardValue.trim();
           }
           if (cardTitle === 'Raffle Time') {
-            draft.raffles[url].raffle_time = cardValue.trim();
+            draft.raffles[wallet][url].raffle_time = cardValue.trim();
           }
         }
         if (twitterLink) {
-          draft.raffles[url].twitter_link = twitterLink;
+          draft.raffles[wallet][url].twitter_link = twitterLink;
         }
         if (discordLink) {
-          draft.raffles[url].discord_link = discordLink;
+          draft.raffles[wallet][url].discord_link = discordLink;
         }
       });
-      setStorageData(newSettings);
-      chrome.runtime.sendMessage({ raffles: newSettings.raffles });
+      setSettings(newSettings);
+      chrome.runtime.sendMessage({
+        raffles: newSettings.raffles,
+        wallet,
+        selectedWallet,
+      });
     }
 
     if (autoWatchOnRegister) {
@@ -167,9 +167,7 @@ function AddToWatchlist() {
               status ? 'c-gray-light' : 'c-base-1'
             } border-0 strong-500`}
           >
-            {isLoading
-              ? 'Loading...'
-              : !status
+            {!status
               ? 'start watching'
               : status === 'register'
               ? 'unregistered'
@@ -182,7 +180,7 @@ function AddToWatchlist() {
 
   return (
     <>
-      {!wallet && (
+      {!wallets ? (
         <>
           {'Add to Watchlist'}
           <br />
@@ -196,9 +194,8 @@ function AddToWatchlist() {
             </button>
           </span>
         </>
-      )}
-      {wallet && settings && (
-        <GetPremintData wallet={wallet} settings={settings} />
+      ) : (
+        <GetPremintData />
       )}
     </>
   );

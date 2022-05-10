@@ -6,22 +6,18 @@ import {
   Box,
   Loader,
 } from '@mantine/core';
-import { useSettingsStore } from '@utils/useSettingsStore';
 import { NotificationsProvider } from '@mantine/notifications';
 import { Header } from '@components/Header';
 import { OptionsForm } from './components/OptionsForm';
 import { ConnectWallet } from './components/ConnectWallet';
+import { OptionsRaffles } from './components/OptionsRaffles';
+import { useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
 
 const Options = () => {
-  const {
-    storageData: settings,
-    setStorageData,
-    isLoading,
-  } = useSettingsStore();
-
-  const { wallet, colorScheme } = settings;
+  const [settings, setSettings] = useSyncedStorageAtom();
+  const { wallet, colorScheme, isLoading } = settings;
   const toggleColorScheme = (value?: ColorScheme) => {
-    setStorageData({
+    setSettings({
       ...settings,
       colorScheme: value || colorScheme === 'dark' ? 'light' : 'dark',
     });
@@ -44,23 +40,22 @@ const Options = () => {
               paddingBottom: '10px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
               width: '100%',
-              height: '100%',
+              height: 'calc(100vh - 56px)',
+              gridColumn: '1 / 3',
+              gap: '10px',
+              justifyContent: 'center',
             }}
           >
             {isLoading ? (
               <Loader color="violet" />
             ) : !wallet ? (
-              <ConnectWallet
-                setStorageData={setStorageData}
-                settings={settings}
-              />
+              <ConnectWallet />
             ) : (
-              <OptionsForm
-                setStorageData={setStorageData}
-                settings={settings}
-              />
+              <>
+                <OptionsForm />
+                <OptionsRaffles />
+              </>
             )}
           </Box>
         </NotificationsProvider>
