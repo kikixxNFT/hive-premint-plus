@@ -96,7 +96,7 @@ const Popup = () => {
               height: '100vh',
             }}
           >
-            <Loader mt="56px" color="violet" />
+            <Loader color="violet" />
           </Box>
         ) : !wallet ? (
           <Error
