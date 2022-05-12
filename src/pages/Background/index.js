@@ -9,6 +9,7 @@ import { SETTINGS_KEY } from '@utils/createSyncedStorageAtom';
 const limit = RateLimit(2);
 const provider = new ethers.providers.JsonRpcProvider(rpc);
 const contractInstance = new ethers.Contract(contractAddress, abi, provider);
+let registering = false;
 
 async function hasPasses({ address }) {
   const foundersPasses = await contractInstance.balanceOf(address, 1);
@@ -29,6 +30,58 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ authenticated: walletHasPasses })
     );
     return true;
+  } else if (request.autoRegister) {
+    if (!registering) {
+      const url = `https://twitter.com/intent/follow?screen_name=${request.twitterScreenName}`;
+      async function openTab() {
+        registering = true;
+        if (request.discordLink) {
+          chrome.tabs.create({
+            url: request.discordLink,
+            active: true,
+          });
+        }
+
+        if (request.twitterScreenName) {
+          const tab = await chrome.tabs.create({
+            url,
+            active: false,
+          });
+          chrome.tabs.onUpdated.addListener(async function (tabId, info) {
+            if (tabId === tab.id && info.url) {
+              await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => {
+                  return new Promise((resolve) => {
+                    const observer = new MutationObserver(function (
+                      mutations,
+                      mutationInstance
+                    ) {
+                      const follow = document?.querySelector(
+                        '[data-testid="confirmationSheetConfirm"]'
+                      );
+                      if (follow) {
+                        follow?.click();
+                        mutationInstance.disconnect();
+                        resolve();
+                      }
+                    });
+
+                    observer.observe(document, {
+                      childList: true,
+                      subtree: true,
+                    });
+                  });
+                },
+              });
+              chrome.tabs.remove(tab.id);
+              registering = false;
+            }
+          });
+        }
+      }
+      openTab();
+    }
   } else {
     sendResponse({ error: 'unknown request' });
   }
@@ -62,6 +115,7 @@ chrome.alarms.onAlarm.addListener(() => {
           ([, data]) => Date.now() - data?.updated_at >= interval * 60 * 1000
         );
         if (updatedRaffles.length > 0) {
+          console.log({ updatedRaffles });
           updatedRaffles.map(async ([url]) => {
             await limit();
             const res = await fetch(`${url}/verify/?wallet=${wallet}`, {

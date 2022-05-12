@@ -51,7 +51,7 @@ function AddToWatchlist() {
       url,
       wallet,
     });
-    const { autoWatchOnRegister } = settings;
+    const { autoWatchOnRegister, autoOpenRegistrationLinks } = settings;
 
     if (isError) {
       console.log(`ERROR: Could not retrieve Premint status for ${url}`);
@@ -133,6 +133,21 @@ function AddToWatchlist() {
         }
         if (discordLink) {
           draft.raffles[wallet][url].discord_link = discordLink;
+        }
+        if (
+          autoOpenRegistrationLinks &&
+          !draft.raffles[wallet][url].auto_registered
+        ) {
+          const twitterScreenName = twitterLink.replace(
+            'https://twitter.com/',
+            ''
+          );
+          chrome.runtime.sendMessage({
+            autoRegister: true,
+            twitterScreenName,
+            discordLink,
+          });
+          draft.raffles[wallet][url].auto_registered = true;
         }
       });
       setSettings(newSettings);

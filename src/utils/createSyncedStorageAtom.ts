@@ -13,6 +13,7 @@ export type RaffleData = {
   raffle_time?: string;
   twitter_link?: string;
   discord_link?: string;
+  auto_registered?: boolean;
 };
 export type Settings = {
   colorScheme: ColorScheme;
@@ -23,6 +24,7 @@ export type Settings = {
   }[];
   autoDeleteLost?: boolean;
   autoWatchOnRegister?: boolean;
+  autoOpenRegistrationLinks?: boolean;
   raffles: {
     [wallet: string]: {
       [url: string]: RaffleData;
@@ -39,6 +41,7 @@ export const INITIAL_VALUE: Settings = {
   wallet: '',
   autoDeleteLost: false,
   autoWatchOnRegister: false,
+  autoOpenRegistrationLinks: false,
   raffles: {},
   isLoading: true,
 };

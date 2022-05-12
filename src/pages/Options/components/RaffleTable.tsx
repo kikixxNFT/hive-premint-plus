@@ -6,7 +6,6 @@ import {
   BrandDiscord,
   BrandTwitter,
   Link as LinkIcon,
-  Trash,
 } from 'tabler-icons-react';
 import produce from 'immer';
 import { Icon } from '@components/Icon';
@@ -27,10 +26,6 @@ export function RaffleTable({ selectedWallet }: { selectedWallet: number }) {
     },
     [setSettings, settings, wallet]
   );
-
-  function handleRemove({ key }: { key: string }) {
-    //trigger removal from Premint
-  }
 
   useEffect(() => {
     const newRows =
@@ -84,22 +79,6 @@ export function RaffleTable({ selectedWallet }: { selectedWallet: number }) {
                 </Anchor>
               )}
               <Tooltip
-                label="Unregister raffle from Premint"
-                position="top"
-                placement="end"
-                withArrow
-              >
-                <ActionIcon
-                  color="red"
-                  variant="outline"
-                  size="xs"
-                  type="button"
-                  onClick={() => handleRemove({ key })}
-                >
-                  <Trash size={24} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip
                 label="Remove raffle from watchlist"
                 position="top"
                 placement="end"
@@ -120,7 +99,7 @@ export function RaffleTable({ selectedWallet }: { selectedWallet: number }) {
         </tr>
       ));
     setRows(newRows);
-  }, [handleDelete, selectedWallet, settings?.raffles]);
+  }, [handleDelete, selectedWallet, settings.raffles, wallet]);
 
   return rows?.length === 0 ? (
     <Box

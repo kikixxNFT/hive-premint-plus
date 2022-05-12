@@ -27,6 +27,7 @@ type FormValues = {
   interval: number;
   autoDeleteLost: boolean;
   autoWatchOnRegister: boolean;
+  autoOpenRegistrationLinks: boolean;
 };
 
 export function OptionsForm() {
@@ -39,6 +40,7 @@ export function OptionsForm() {
     interval,
     autoDeleteLost,
     autoWatchOnRegister,
+    autoOpenRegistrationLinks,
     colorScheme,
   } = settings;
   const theme = useMantineTheme();
@@ -48,6 +50,7 @@ export function OptionsForm() {
       interval,
       autoDeleteLost,
       autoWatchOnRegister,
+      autoOpenRegistrationLinks,
     },
   });
   const { fields, append, remove } = useFieldArray({
@@ -204,6 +207,11 @@ export function OptionsForm() {
           color="grape"
           label="Automatically add to watchlist on register"
           {...register('autoWatchOnRegister')}
+        />
+        <Switch
+          color="grape"
+          label="Automatically open Discord and follow Twitter when adding to watchlist"
+          {...register('autoOpenRegistrationLinks')}
         />
 
         <Button variant="outline" onClick={() => setOpened(true)}>

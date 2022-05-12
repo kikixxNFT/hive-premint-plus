@@ -14,8 +14,11 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "permissions": ["storage", "alarms"],
-  "host_permissions": ["https://opensea.io/*"],
+  "permissions": ["storage", "alarms", "scripting"],
+  "host_permissions": [
+    "https://opensea.io/*",
+    "https://twitter.com/intent/follow*"
+  ],
   "content_scripts": [
     {
       "matches": ["https://www.premint.xyz/*"],
