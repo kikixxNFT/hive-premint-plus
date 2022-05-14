@@ -1,6 +1,6 @@
 import { useFieldArray, useForm } from 'react-hook-form';
 import { showNotification } from '@mantine/notifications';
-import { CircleCheck, Plus, Minus } from 'tabler-icons-react';
+import { CircleCheck, Plus, Minus, Settings } from 'tabler-icons-react';
 import React, { useState } from 'react';
 import {
   TextInput,
@@ -19,6 +19,7 @@ import {
   ActionIcon,
 } from '@mantine/core';
 import { useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
+import produce from 'immer';
 
 type FormValues = {
   wallets: {
@@ -42,8 +43,11 @@ export function OptionsForm() {
     autoWatchOnRegister,
     autoOpenRegistrationLinks,
     colorScheme,
+    selectedWallet: previousSelectedWallet = 0,
   } = settings;
   const theme = useMantineTheme();
+  const selectedwallet =
+    settings?.wallets?.[previousSelectedWallet]?.wallet || '';
   const { register, handleSubmit, formState, control } = useForm<FormValues>({
     defaultValues: {
       wallets: wallets || [{ wallet }],
@@ -77,9 +81,34 @@ export function OptionsForm() {
   }
 
   async function handleImport() {
-    // make sure to avoid importing duplicates
     setIsImporting(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const premintDoc = document.createElement('div');
+    const base = document.createElement('base');
+    base.setAttribute('href', 'https://premint.xyz');
+    document.body.appendChild(base);
+    const res = await fetch('https://www.premint.xyz/collectors/entries/');
+    premintDoc.innerHTML = await res.text();
+    let updated = false;
+    const newSettings = produce(settings, (draft) => {
+      if (!draft.raffles.hasOwnProperty(selectedwallet)) {
+        draft.raffles[selectedwallet] = {};
+      }
+      Array.from(
+        premintDoc?.querySelectorAll('.card-body a:first-child')
+      ).forEach((link) => {
+        const linkUrl = (link as HTMLAnchorElement).href;
+        if (!settings?.raffles?.[selectedwallet]?.hasOwnProperty(linkUrl)) {
+          draft.raffles[selectedwallet][linkUrl] = {
+            name: link.textContent || linkUrl,
+            status: 'unknown',
+            updated_at: new Date().getTime(),
+            created_at: new Date().getTime(),
+          };
+          updated = true;
+        }
+      });
+    });
+    if (updated) setSettings(newSettings);
     setIsImporting(false);
     setOpened(false);
   }
@@ -249,6 +278,9 @@ export function OptionsForm() {
             raffles than you thought! Please make sure you want all your
             previous raffle entries added, as you will need to remove any
             unwated raffles manually afterward.
+          </Text>
+          <Text sx={{ color: 'red' }}>
+            Please make sure you're logged into Premint before continuing!
           </Text>
           <Group position="right" mt="md">
             <Button
