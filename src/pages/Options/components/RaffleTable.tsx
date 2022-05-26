@@ -22,9 +22,13 @@ export function RaffleTable({ selectedWallet }: { selectedWallet: number }) {
         delete draft.raffles[wallet][key];
       });
       setSettings(newSettings);
-      chrome.runtime.sendMessage({ raffles: newSettings.raffles });
+      chrome.runtime.sendMessage({
+        raffles: newSettings.raffles,
+        wallet,
+        selectedWallet,
+      });
     },
-    [setSettings, settings, wallet]
+    [selectedWallet, setSettings, settings, wallet]
   );
 
   useEffect(() => {

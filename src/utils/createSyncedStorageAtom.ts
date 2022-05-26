@@ -1,5 +1,6 @@
 import { atom, useAtom, WritableAtom } from 'jotai';
 import { ColorScheme } from '@mantine/core';
+import localForage from 'localforage';
 
 export type RaffleData = {
   name: string;
@@ -45,6 +46,14 @@ export const INITIAL_VALUE: Settings = {
   raffles: {},
   isLoading: true,
 };
+export const DB_CONFIG = {
+  driver: localForage.INDEXEDDB,
+  name: 'hive-premint-plus',
+  version: 1.0,
+  storeName: SETTINGS_KEY,
+};
+
+localForage.config(DB_CONFIG);
 
 const atomWithSyncedSyncStorage = <Settings>(
   key: string,
@@ -52,25 +61,13 @@ const atomWithSyncedSyncStorage = <Settings>(
 ) => {
   const baseAtom = atom(initialValue);
   baseAtom.onMount = (setValue) => {
-    function storageUpdateListener(changes: {
-      [key: string]: chrome.storage.StorageChange;
-    }) {
-      for (let [changedKey, { newValue }] of Object.entries(changes)) {
-        if (changedKey === key) {
-          setValue(newValue ?? undefined);
-        }
-      }
-    }
-    chrome.storage.onChanged.addListener(storageUpdateListener);
-    chrome.storage.sync.get([key], (items) => {
-      if (items[key]) {
-        setValue({ ...items[key], isLoading: false });
+    localForage.getItem(key, (items) => {
+      if (items) {
+        setValue({ ...items, isLoading: false });
       } else {
         setValue((prev) => ({ ...prev, isLoading: false }));
       }
     });
-
-    return () => chrome.storage.onChanged.removeListener(storageUpdateListener);
   };
   const derivedAtom = atom(
     (get) => get(baseAtom),
@@ -79,9 +76,9 @@ const atomWithSyncedSyncStorage = <Settings>(
         typeof update === 'function' ? update(get(baseAtom)) : update;
       set(baseAtom, nextValue);
       if (nextValue === undefined) {
-        chrome.storage.sync.clear();
+        localForage.clear();
       } else {
-        chrome.storage.sync.set({ [key]: nextValue }, () => {});
+        localForage.setItem(key, nextValue);
       }
     }
   );

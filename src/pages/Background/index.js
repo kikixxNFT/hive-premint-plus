@@ -4,12 +4,14 @@ import { RateLimit } from 'async-sema';
 import { setBadgeText } from '@utils/setBadgeText';
 import { ethers, BigNumber } from 'ethers';
 import { abi, contractAddress, rpc } from '@assets/hive-alpha';
-import { SETTINGS_KEY } from '@utils/createSyncedStorageAtom';
+import localForage from 'localforage';
+import { DB_CONFIG, SETTINGS_KEY } from '@utils/createSyncedStorageAtom';
 
 const limit = RateLimit(2);
 const provider = new ethers.providers.JsonRpcProvider(rpc);
 const contractInstance = new ethers.Contract(contractAddress, abi, provider);
 let registering = false;
+localForage.config(DB_CONFIG);
 
 async function hasPasses({ address }) {
   const foundersPasses = await contractInstance.balanceOf(address, 1);
@@ -95,22 +97,22 @@ chrome.runtime.onInstalled.addListener((reason) => {
   }
 });
 
-chrome.storage.sync.get(SETTINGS_KEY, (data) => {
+localForage.getItem(SETTINGS_KEY, (err, data) => {
   chrome.alarms.create('poll-premint', { periodInMinutes: 30 });
 });
 
 chrome.alarms.onAlarm.addListener(() => {
-  chrome.storage.sync.get(SETTINGS_KEY, async (data) => {
-    const { raffles, wallet, interval, autoDeleteLost } = data?.[SETTINGS_KEY];
+  localForage.getItem(SETTINGS_KEY, (err, data) => {
+    const { raffles, wallet, interval, autoDeleteLost } = data;
     if (!wallet) return;
 
     if (!hasPasses({ address: wallet })) {
-      const newSettings = produce(data?.[SETTINGS_KEY], (draft) => {
+      const newSettings = produce(data, (draft) => {
         delete draft.wallet;
       });
-      chrome.storage.sync.set({ [SETTINGS_KEY]: newSettings });
+      localForage.setItem(SETTINGS_KEY, newSettings);
     } else {
-      Object.entries(raffles).map(([wallet, raffle]) => {
+      Object.entries(raffles).forEach(([wallet, raffle]) => {
         const updatedRaffles = Object.entries(raffle).filter(
           ([, data]) => Date.now() - data?.updated_at >= interval * 60 * 1000
         );
@@ -142,7 +144,7 @@ chrome.alarms.onAlarm.addListener(() => {
                 delete draft.raffles[wallet][url];
               }
             });
-            chrome.storage.sync.set({ [SETTINGS_KEY]: newSettings });
+            localForage.setItem(SETTINGS_KEY, newSettings);
           });
         }
       });
