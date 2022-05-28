@@ -10,10 +10,11 @@ import {
 import { Link } from '@components/Link';
 import { Header } from '@components/Header';
 import { Error, RaffleList } from './components';
-import { Settings, useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
+import { useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
 import { useQueries } from 'react-query';
 import { fetchStatus } from '@utils/useGetPremintStatus';
 import { setBadgeText } from '@utils/setBadgeText';
+import { Settings } from '@background/storage';
 
 const Popup = () => {
   const [settings, setSettings] = useSyncedStorageAtom();
@@ -65,6 +66,7 @@ const Popup = () => {
           .map(([url]) => ({
             queryKey: [`${url}/verify/`, wallet],
             queryFn: () => fetchStatus({ url, wallet }),
+            onerror: () => {},
           }))
       : []
   );

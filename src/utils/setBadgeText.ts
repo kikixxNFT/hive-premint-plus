@@ -1,4 +1,4 @@
-import { Settings } from '@utils/createSyncedStorageAtom';
+import { Settings } from '@background/storage';
 
 export const setBadgeText = ({
   raffles,
@@ -17,5 +17,5 @@ export const setBadgeText = ({
   chrome.action.setBadgeBackgroundColor({
     color: won?.length ? '#AF8700' : '#707070',
   });
-  chrome.action.setBadgeText({ text: String(selectedWallet + 1) });
+  chrome.action.setBadgeText({ text: `#${String(selectedWallet + 1)}` });
 };

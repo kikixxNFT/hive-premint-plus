@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Box, useMantineTheme, Tabs, Text } from '@mantine/core';
 import { RaffleTable } from './RaffleTable';
-import { Settings, useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
+import { useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
+import { Settings } from '@background/storage';
 
 export function OptionsRaffles() {
   const [settings, setSettings] = useSyncedStorageAtom();

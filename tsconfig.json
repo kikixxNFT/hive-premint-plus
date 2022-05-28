@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -20,26 +16,13 @@
     "jsx": "react",
     "baseUrl": "./src",
     "paths": {
-      "@popup/*": [
-        "pages/Popup/*"
-      ],
-      "@components/*": [
-        "components/*"
-      ],
-      "@utils/*": [
-        "utils/*"
-      ],
-      "@assets/*": [
-        "assets/*"
-      ]
+      "@popup/*": ["pages/Popup/*"],
+      "@background/*": ["pages/Background/*"],
+      "@components/*": ["components/*"],
+      "@utils/*": ["utils/*"],
+      "@assets/*": ["assets/*"]
     }
   },
-  "include": [
-    "src",
-    "custom.d.ts"
-  ],
-  "exclude": [
-    "build",
-    "node_modules"
-  ]
+  "include": ["src", "custom.d.ts"],
+  "exclude": ["build", "node_modules"]
 }

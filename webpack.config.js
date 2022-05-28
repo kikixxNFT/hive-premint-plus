@@ -14,6 +14,7 @@ var alias = {
   '@components': path.resolve(process.cwd(), './src/components/'),
   '@utils': path.resolve(process.cwd(), './src/utils/'),
   '@popup': path.resolve(process.cwd(), './src/pages/Popup/'),
+  '@background': path.resolve(process.cwd(), './src/pages/Background/'),
   '@assets': path.resolve(process.cwd(), './src/assets/'),
 };
 

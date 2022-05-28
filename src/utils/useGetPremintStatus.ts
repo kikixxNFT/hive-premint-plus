@@ -1,6 +1,6 @@
 import { useQuery } from 'react-query';
 import axios from 'axios';
-import { RaffleData } from '@utils/createSyncedStorageAtom';
+import { RaffleData } from '@background/storage';
 
 export const UNREGISTERED: { wording: string; status: RaffleData['status'] } = {
   wording: `You aren't registered.`,

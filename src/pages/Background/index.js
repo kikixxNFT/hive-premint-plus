@@ -4,14 +4,12 @@ import { RateLimit } from 'async-sema';
 import { setBadgeText } from '@utils/setBadgeText';
 import { ethers, BigNumber } from 'ethers';
 import { abi, contractAddress, rpc } from '@assets/hive-alpha';
-import localForage from 'localforage';
-import { DB_CONFIG, SETTINGS_KEY } from '@utils/createSyncedStorageAtom';
+import { clearStorage, getStorage, setStorage } from './storage';
 
 const limit = RateLimit(2);
 const provider = new ethers.providers.JsonRpcProvider(rpc);
 const contractInstance = new ethers.Contract(contractAddress, abi, provider);
 let registering = false;
-localForage.config(DB_CONFIG);
 
 async function hasPasses({ address }) {
   const foundersPasses = await contractInstance.balanceOf(address, 1);
@@ -26,7 +24,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       wallet: request.wallet,
       selectedWallet: request.selectedWallet,
     });
-    sendResponse({ badgeUpdated: true });
   } else if (request.verifyAddress) {
     hasPasses({ address: request.verifyAddress }).then((walletHasPasses) =>
       sendResponse({ authenticated: walletHasPasses })
@@ -84,6 +81,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       openTab();
     }
+  } else if (request.getSettings) {
+    getStorage().then((settings) => sendResponse({ settings }));
+    return true;
+  } else if (request.setSettings) {
+    setStorage({ settings: request.settings });
+    sendResponse({ settingsUpdated: true });
+    return true;
+  } else if (request.clearSettings) {
+    clearStorage();
   } else {
     sendResponse({ error: 'unknown request' });
   }
@@ -97,28 +103,25 @@ chrome.runtime.onInstalled.addListener((reason) => {
   }
 });
 
-localForage.getItem(SETTINGS_KEY, (err, data) => {
-  chrome.alarms.create('poll-premint', { periodInMinutes: 30 });
-});
+chrome.alarms.create('poll-premint', { periodInMinutes: 30 });
 
 chrome.alarms.onAlarm.addListener(() => {
-  localForage.getItem(SETTINGS_KEY, (err, data) => {
-    const { raffles, wallet, interval, autoDeleteLost } = data;
+  getStorage().then((settings) => {
+    const { raffles, wallet, interval, autoDeleteLost } = settings;
     if (!wallet) return;
 
     if (!hasPasses({ address: wallet })) {
-      const newSettings = produce(data, (draft) => {
+      const newSettings = produce(settings, (draft) => {
         delete draft.wallet;
       });
-      localForage.setItem(SETTINGS_KEY, newSettings);
+      setStorage(newSettings);
     } else {
       Object.entries(raffles).forEach(([wallet, raffle]) => {
         const updatedRaffles = Object.entries(raffle).filter(
           ([, data]) => Date.now() - data?.updated_at >= interval * 60 * 1000
         );
         if (updatedRaffles.length > 0) {
-          console.log({ updatedRaffles });
-          updatedRaffles.map(async ([url]) => {
+          updatedRaffles.forEach(async ([url]) => {
             await limit();
             const res = await fetch(`${url}/verify/?wallet=${wallet}`, {
               method: 'GET',
@@ -126,17 +129,17 @@ chrome.alarms.onAlarm.addListener(() => {
             });
             const txt = await res.text();
             let matchedStatus = 'unknown';
-            const newSettings = produce(data?.[SETTINGS_KEY], (draft) => {
-              if (txt.includes(UNREGISTERED.wording)) {
-                matchedStatus = UNREGISTERED.status;
-              } else {
-                for (let [key, status] of Object.entries(statuses)) {
-                  if (txt.includes(key)) {
-                    matchedStatus = status;
-                    break;
-                  }
+            if (txt.includes(UNREGISTERED.wording)) {
+              matchedStatus = UNREGISTERED.status;
+            } else {
+              for (let [key, status] of Object.entries(statuses)) {
+                if (txt.includes(key)) {
+                  matchedStatus = status;
+                  break;
                 }
               }
+            }
+            const newSettings = produce(settings, (draft) => {
               draft.raffles[wallet][url].status = matchedStatus;
               draft.raffles[wallet][url].updated_at = Date.now();
 
@@ -144,7 +147,7 @@ chrome.alarms.onAlarm.addListener(() => {
                 delete draft.raffles[wallet][url];
               }
             });
-            localForage.setItem(SETTINGS_KEY, newSettings);
+            setStorage(newSettings);
           });
         }
       });

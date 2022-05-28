@@ -22,7 +22,6 @@ const Options = () => {
       colorScheme: value || colorScheme === 'dark' ? 'light' : 'dark',
     });
   };
-
   return (
     <ColorSchemeProvider
       colorScheme={colorScheme}

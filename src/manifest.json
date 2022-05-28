@@ -17,7 +17,8 @@
   "permissions": ["storage", "alarms", "scripting"],
   "host_permissions": [
     "https://opensea.io/*",
-    "https://twitter.com/intent/follow*"
+    "https://twitter.com/intent/follow*",
+    "https://www.premint.xyz/*"
   ],
   "content_scripts": [
     {

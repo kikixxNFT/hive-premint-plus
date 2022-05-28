@@ -1,20 +1,29 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { render } from 'react-dom';
 import { produce } from 'immer';
 import { statuses, useGetPremintStatus } from '@utils/useGetPremintStatus';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import {
-  createSyncedStorageAtom,
-  RaffleData,
-  useSyncedStorageAtom,
-} from '@utils/createSyncedStorageAtom';
+import { INITIAL_VALUE, RaffleData, Settings } from '@background/storage';
+import { Box } from '@mantine/core';
 
 const queryClient = new QueryClient();
-createSyncedStorageAtom();
 
 function AddToWatchlist() {
-  const [settings, setSettings] = useSyncedStorageAtom();
-  const { wallets, selectedWallet } = settings;
+  const [settings, setSettings] = useState(INITIAL_VALUE);
+  const { wallets } = settings;
+
+  useEffect(() => {
+    chrome.runtime.sendMessage({ getSettings: true }, (resp) => {
+      setSettings(resp.settings);
+    });
+  }, []);
+
+  chrome.runtime.onMessage.addListener((response) => {
+    if (response.settingsUpdated) {
+      setSettings(response.settings);
+    }
+    return true;
+  });
 
   const statusIcons: {
     [status in RaffleData['status']]: { [key: string]: string };
@@ -41,11 +50,12 @@ function AddToWatchlist() {
     },
   };
 
-  function GetPremintData() {
+  function GetPremintData({ settings }: { settings: Settings }) {
     const url = `${window.location.origin}/${
       window.location.pathname.split('/')[1]
     }`;
-    const wallet = wallets?.[selectedWallet || 0]?.wallet || '';
+    const { wallets, selectedWallet = 0 } = settings;
+    const wallet = wallets?.[selectedWallet]?.wallet || '';
     const status = settings?.raffles[wallet]?.[url]?.status;
     const { data, isError } = useGetPremintStatus({
       url,
@@ -58,23 +68,48 @@ function AddToWatchlist() {
     }
 
     useEffect(() => {
-      if (
-        data?.status &&
-        settings?.raffles?.[wallet].hasOwnProperty(url) &&
-        settings?.raffles?.[wallet]?.[url]?.status !== data?.status
-      ) {
+      if (data?.status && settings?.raffles?.[wallet].hasOwnProperty(url)) {
+        const infoDivs =
+          window?.document
+            ?.querySelector('.container .row div:nth-child(3)')
+            ?.querySelectorAll('div:not(.text-uppercase)') || [];
         const newSettings = produce(settings, (draft) => {
           draft.raffles[wallet][url] = {
             ...draft.raffles[wallet][url],
             status: data?.status,
             updated_at: Date.now(),
           };
+          for (let info of Array.from(infoDivs)) {
+            const [cardTitle, cardValue] = (
+              info as HTMLElement
+            ).innerText.split('\n');
+            if (cardTitle === 'OFFICIAL LINK') {
+              draft.raffles[wallet][url].official_link = cardValue.trim();
+            }
+            if (cardTitle === 'REGISTRATION CLOSES') {
+              draft.raffles[wallet][url].registration_closes = cardValue.trim();
+            }
+            if (cardTitle === 'MINT DATE') {
+              draft.raffles[wallet][url].mint_date = cardValue.trim();
+            }
+            if (cardTitle === 'MINT PRICE') {
+              draft.raffles[wallet][url].mint_price = cardValue.trim();
+            }
+            if (cardTitle === 'RAFFLE TIME') {
+              draft.raffles[wallet][url].raffle_time = cardValue.trim();
+            }
+          }
         });
-        setSettings(newSettings);
+        chrome.runtime.sendMessage({
+          setSettings: true,
+          settings: newSettings,
+        });
       }
-    }, [data?.status, url, wallet]);
+    }, [data?.status, settings, url, wallet]);
 
     async function handleAdd() {
+      const { selectedWallet = 0 } = settings;
+      const wallet = wallets?.[selectedWallet]?.wallet || '';
       const status: RaffleData['status'] =
         data?.status ||
         (window?.document
@@ -88,8 +123,8 @@ function AddToWatchlist() {
 
       const infoDivs =
         window?.document
-          ?.querySelector('.container .row div:nth-child(2) div')
-          ?.querySelectorAll('div') || [];
+          ?.querySelector('.container .row div:nth-child(3)')
+          ?.querySelectorAll('div:not(.text-uppercase)') || [];
       const twitterLink =
         window?.document
           ?.querySelector('.fa-twitter')
@@ -111,20 +146,22 @@ function AddToWatchlist() {
         };
 
         for (let info of Array.from(infoDivs)) {
-          const [cardTitle, cardValue] = info.innerText.split('\n');
-          if (cardTitle === 'Official Link') {
+          const [cardTitle, cardValue] = (info as HTMLElement).innerText.split(
+            '\n'
+          );
+          if (cardTitle === 'OFFICIAL LINK') {
             draft.raffles[wallet][url].official_link = cardValue.trim();
           }
-          if (cardTitle === 'Registration Closes') {
+          if (cardTitle === 'REGISTRATION CLOSES') {
             draft.raffles[wallet][url].registration_closes = cardValue.trim();
           }
-          if (cardTitle === 'Mint Date') {
+          if (cardTitle === 'MINT DATE') {
             draft.raffles[wallet][url].mint_date = cardValue.trim();
           }
-          if (cardTitle === 'Mint Price') {
+          if (cardTitle === 'MINT PRICE') {
             draft.raffles[wallet][url].mint_price = cardValue.trim();
           }
-          if (cardTitle === 'Raffle Time') {
+          if (cardTitle === 'RAFFLE TIME') {
             draft.raffles[wallet][url].raffle_time = cardValue.trim();
           }
         }
@@ -150,12 +187,7 @@ function AddToWatchlist() {
           draft.raffles[wallet][url].auto_registered = true;
         }
       });
-      setSettings(newSettings);
-      chrome.runtime.sendMessage({
-        raffles: newSettings.raffles,
-        wallet,
-        selectedWallet,
-      });
+      chrome.runtime.sendMessage({ setSettings: true, settings: newSettings });
     }
 
     if (autoWatchOnRegister) {
@@ -166,10 +198,10 @@ function AddToWatchlist() {
     }
 
     return (
-      <>
+      <Box className="text-uppercase text-sm text-muted">
         {'Add to Watchlist'}
         <br />
-        <span className="badge badge-lg text-md z-depth-2-top">
+        <span>
           <i
             className={`fas ${statusIcons[status || 'unknown'].icon} ${
               statusIcons[status || 'unknown'].color
@@ -178,7 +210,7 @@ function AddToWatchlist() {
           <button
             onClick={handleAdd}
             disabled={!!status}
-            className={`p-0 bg-transparent ${
+            className={`text-md p-0 bg-transparent ${
               status ? 'c-gray-light' : 'c-base-1'
             } border-0 strong-500`}
           >
@@ -189,38 +221,38 @@ function AddToWatchlist() {
               : status}
           </button>
         </span>
-      </>
+      </Box>
     );
   }
 
   return (
     <>
       {!wallets ? (
-        <>
+        <Box className="text-uppercase text-sm text-muted">
           {'Add to Watchlist'}
           <br />
-          <span className="badge badge-lg text-md z-depth-2-top">
+          <span>
             <i className={`fas fa-exclamation-triangle mr-2`}></i>
             <button
               disabled
-              className={`p-0 bg-transparent c-gray-light border-0 strong-500`}
+              className={`text-md p-0 bg-transparent c-gray-light border-0 strong-500`}
             >
               {'Not Configured!'}
             </button>
           </span>
-        </>
+        </Box>
       ) : (
-        <GetPremintData />
+        <GetPremintData settings={settings} />
       )}
     </>
   );
 }
 
 const container = window.document.querySelector(
-  '.container .row div:nth-child(2) div'
+  '.container .row div:nth-child(3)'
 );
 const app = document.createElement('div');
-app.className = 'c-gray-light text-md strong-500 d-inline-block mr-3 mb-4';
+app.className = 'col-6 col-lg-4 mb-4';
 app.textContent = 'Add to Watchlist';
 container?.appendChild(app);
 render(
