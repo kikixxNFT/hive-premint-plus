@@ -32,7 +32,16 @@ export function RaffleTable({ selectedWallet }: { selectedWallet: number }) {
       Object.entries(settings.raffles[wallet])?.map(([key, raffle]) => (
         <tr key={key}>
           <td>
-            <Link href={key}>{raffle?.name}</Link>
+            <Link
+              href={key}
+              sx={{
+                color: raffle?.status === 'lost' ? 'gray' : 'inherit',
+                textDecoration:
+                  raffle?.status === 'lost' ? 'line-through' : 'none',
+              }}
+            >
+              {raffle?.name}
+            </Link>
           </td>
           <td>
             <Icon type={raffle?.status} />

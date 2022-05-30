@@ -26,28 +26,22 @@ const atomWithSyncedSyncStorage = <Settings>(
       const nextValue =
         typeof update === 'function' ? update(get(baseAtom)) : update;
       if (nextValue === undefined) {
-        chrome.runtime.sendMessage(
-          {
-            clearSettings: true,
-          },
-          () => set(baseAtom, nextValue)
-        );
+        chrome.runtime.sendMessage({
+          clearSettings: true,
+        });
+        set(baseAtom, nextValue);
       } else {
-        chrome.runtime.sendMessage(
-          {
-            setSettings: true,
-            settings: nextValue,
-          },
-          (data) => {
-            const { raffles, wallet, selectedWallet } = data;
-            chrome.runtime.sendMessage({
-              raffles,
-              wallet,
-              selectedWallet,
-            });
-            set(baseAtom, nextValue);
-          }
-        );
+        chrome.runtime.sendMessage({
+          setSettings: true,
+          settings: nextValue,
+        });
+        const { raffles, wallet, selectedWallet } = nextValue;
+        chrome.runtime.sendMessage({
+          raffles,
+          wallet,
+          selectedWallet,
+        });
+        set(baseAtom, nextValue);
       }
     }
   );
@@ -65,10 +59,6 @@ export const createSyncedStorageAtom = () => {
     );
   }
   useSyncedStorageAtom = () => useAtom(syncedStorageAtom);
-
-  chrome.runtime.onMessage.addListener(() => {
-    return true;
-  });
 
   return [syncedStorageAtom, useSyncedStorageAtom] as [
     typeof syncedStorageAtom,

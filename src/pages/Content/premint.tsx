@@ -14,15 +14,16 @@ function AddToWatchlist() {
 
   useEffect(() => {
     chrome.runtime.sendMessage({ getSettings: true }, (resp) => {
+      console.log('loaded settings', resp.settings);
       setSettings(resp.settings);
     });
   }, []);
 
-  chrome.runtime.onMessage.addListener((response) => {
-    if (response.settingsUpdated) {
-      setSettings(response.settings);
+  chrome.runtime.onMessage.addListener((request, response, sendResponse) => {
+    if (request.settingsUpdated) {
+      console.log('settingsUpdated', request.settings);
+      setSettings(request.settings);
     }
-    return true;
   });
 
   const statusIcons: {
@@ -68,42 +69,57 @@ function AddToWatchlist() {
     }
 
     useEffect(() => {
+      console.log('useEffect');
       if (data?.status && settings?.raffles?.[wallet].hasOwnProperty(url)) {
         const infoDivs =
           window?.document
             ?.querySelector('.container .row div:nth-child(3)')
             ?.querySelectorAll('div:not(.text-uppercase)') || [];
+        let updated = false;
         const newSettings = produce(settings, (draft) => {
-          draft.raffles[wallet][url] = {
-            ...draft.raffles[wallet][url],
-            status: data?.status,
-            updated_at: Date.now(),
-          };
+          if (draft.raffles[wallet][url].status !== data?.status) {
+            draft.raffles[wallet][url] = {
+              ...draft.raffles[wallet][url],
+              status: data?.status,
+              updated_at: Date.now(),
+            };
+            updated = true;
+          }
           for (let info of Array.from(infoDivs)) {
             const [cardTitle, cardValue] = (
               info as HTMLElement
             ).innerText.split('\n');
             if (cardTitle === 'OFFICIAL LINK') {
               draft.raffles[wallet][url].official_link = cardValue.trim();
+              updated = true;
             }
             if (cardTitle === 'REGISTRATION CLOSES') {
               draft.raffles[wallet][url].registration_closes = cardValue.trim();
+              updated = true;
             }
             if (cardTitle === 'MINT DATE') {
               draft.raffles[wallet][url].mint_date = cardValue.trim();
+              updated = true;
             }
             if (cardTitle === 'MINT PRICE') {
               draft.raffles[wallet][url].mint_price = cardValue.trim();
+              updated = true;
             }
             if (cardTitle === 'RAFFLE TIME') {
               draft.raffles[wallet][url].raffle_time = cardValue.trim();
+              updated = true;
             }
           }
         });
-        chrome.runtime.sendMessage({
-          setSettings: true,
-          settings: newSettings,
-        });
+        if (updated) {
+          setSettings(newSettings);
+          console.log('updating...');
+          console.log({ newSettings });
+          //chrome.runtime.sendMessage({
+          //  setSettings: true,
+          //  settings: newSettings,
+          //});
+        }
       }
     }, [data?.status, settings, url, wallet]);
 

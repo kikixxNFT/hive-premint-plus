@@ -56,22 +56,20 @@ const DB_CONFIG = {
 localForage.config(DB_CONFIG);
 
 export function setStorage({ settings }: { settings: Settings }) {
-  localForage.setItem(SETTINGS_KEY, settings, (err, data) => {
-    chrome.tabs.query({ url: '*://*.premint.xyz/*' }, function (tabs) {
-      tabs.forEach(function (tab) {
-        if (tab && tab.id) {
-          chrome.tabs.sendMessage(tab.id, {
-            settingsUpdated: true,
-            settings: data,
-          });
-        }
+  if (settings) {
+    localForage.setItem(SETTINGS_KEY, settings, (err, data) => {
+      chrome.tabs.query({ url: '*://*.premint.xyz/*' }, function (tabs) {
+        tabs.forEach(function (tab) {
+          if (tab && tab.id) {
+            chrome.tabs.sendMessage(tab.id, {
+              settingsUpdated: true,
+              settings: data,
+            });
+          }
+        });
       });
     });
-    chrome.runtime.sendMessage({
-      settingsUpdated: true,
-      settings: data,
-    });
-  });
+  }
 }
 
 export function getStorage() {
@@ -79,5 +77,5 @@ export function getStorage() {
 }
 
 export function clearStorage() {
-  return localForage.clear();
+  return setStorage({ settings: INITIAL_VALUE });
 }
