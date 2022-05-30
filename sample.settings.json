@@ -1,0 +1,134 @@
+{
+  "settings": {
+    "colorScheme": "dark",
+    "interval": 60,
+    "wallet": "0xa873949C3c94DB1dDF128b1867B49b0d75F987b4",
+    "autoDeleteLost": false,
+    "autoWatchOnRegister": true,
+    "autoOpenRegistrationLinks": true,
+    "raffles": {
+      "0xa873949C3c94DB1dDF128b1867B49b0d75F987b4": {
+        "https://www.premint.xyz/miyoku-x-uwucrew": {
+          "name": "Miyoku x uwucrew",
+          "status": "unknown",
+          "updated_at": 1653691108825,
+          "created_at": 1653691108825
+        },
+        "https://www.premint.xyz/automated-assassins-presale-registration": {
+          "name": "Automated Assassins Presale Sign-Up",
+          "status": "unknown",
+          "updated_at": 1653691108825,
+          "created_at": 1653691108825
+        },
+        "https://www.premint.xyz/AkiraNFTs": {
+          "name": "Akira NFT Giveaways",
+          "status": "unknown",
+          "updated_at": 1653691108825,
+          "created_at": 1653691108825
+        },
+        "https://www.premint.xyz/beat-bots-presale-raffle": {
+          "name": "Beat Bots Final Presale Raffle",
+          "status": "unknown",
+          "updated_at": 1653691108825,
+          "created_at": 1653691108825
+        },
+        "https://www.premint.xyz/tajigen-mintlist-raffle-50": {
+          "name": "Tajigen Mintlist Raffle - 50 spots",
+          "status": "unknown",
+          "updated_at": 1653691108825,
+          "created_at": 1653691108825
+        },
+        "https://www.premint.xyz/tajigen-super-space-defenders-wl-raffle": {
+          "name": "Tajigen x Super Space Defenders",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/tajigen-moonlanderz-raffle": {
+          "name": "Tajigen x MoonLanderz WL raffle",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/exclusible-penthouse-official": {
+          "name": "Exclusible Penthouse [RAFFLE]",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/akira4of4": {
+          "name": "Comic + Mint Disk WL | Akira NFT 4 of 4",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/Demonica-alpha-giveaway": {
+          "name": "Demonica Alpha Giveaway",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/the-armors-x-kuroki": {
+          "name": "The Armors x Kuroki",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/voyager-pass": {
+          "name": "Voyager Pass",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/miyoku-x-overborne": {
+          "name": "Miyoku x Overborne",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/imaginary-pixels": {
+          "name": "Imaginary Pixels",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/wallstfam": {
+          "name": "Free-to-Mint Raffle for #1 NFT Tool",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/you-pfp-raffle": {
+          "name": "\"You\" Raffle",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/lost-eden-raffle": {
+          "name": "Lost Eden",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/cowlony-allowlist": {
+          "name": "cowlony allowlist",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        },
+        "https://www.premint.xyz/sakura-hunters-alpha-giveaway": {
+          "name": "Sakura Hunters Alpha Giveaway",
+          "status": "unknown",
+          "updated_at": 1653691108826,
+          "created_at": 1653691108826
+        }
+      }
+    },
+    "isLoading": false,
+    "wallets": [
+      {
+        "wallet": "0xa873949C3c94DB1dDF128b1867B49b0d75F987b4"
+      }
+    ]
+  }
+}

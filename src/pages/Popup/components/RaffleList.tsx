@@ -66,7 +66,6 @@ export function RaffleList({
       if (updated) {
         const newSettings = finishDraft(draft);
         setSettings(newSettings);
-        setBadgeText({ raffles: newSettings.raffles, selectedWallet, wallet });
       }
     }
   }, [
