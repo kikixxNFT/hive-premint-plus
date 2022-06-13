@@ -72,7 +72,7 @@ export function ConnectWallet() {
         <>
           <TextInput
             required
-            label="Hive Alpha Wallet"
+            label="Pass Wallet"
             radius="md"
             value={walletAddress}
             placeholder="0x..."
@@ -109,7 +109,7 @@ export function ConnectWallet() {
           />
           <Text>
             When done, click <strong>Verify Wallet</strong> so that we can
-            confirm your wallet holds a Hive Alpha or Hive Founders pass.
+            confirm your wallet holds a compatible Premint+ pass.
           </Text>
           <Button
             color="grape"
@@ -130,7 +130,16 @@ export function ConnectWallet() {
                 target="_blank"
                 rel="noreferrer"
               >
-                Hive Alpha or Hive Founders
+                Hive Alpha, Hive Founders
+              </Anchor>
+              {' or '}
+              <Anchor
+                sx={{ color: 'white' }}
+                href="https://opensea.io/collection/hive-alpha"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Premint+
               </Anchor>
               {' pass.'}
             </Text>

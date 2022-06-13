@@ -87,11 +87,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     getStorage().then((settings) => sendResponse({ settings }));
     return true;
   } else if (request.setSettings) {
-    console.log({ request, sender });
-    console.log('setting storage', request.settings);
     setStorage({ settings: request.settings });
     sendResponse();
-    return true;
   } else if (request.clearSettings) {
     clearStorage();
     sendResponse();
@@ -135,30 +132,34 @@ chrome.alarms.onAlarm.addListener(() => {
             const txt = await res.text();
             return { url, txt };
           });
-          const results = await Promise.all(premintStatuses);
-          const draft = createDraft(settings);
-          for (let { url, txt } of results) {
-            let matchedStatus = 'unknown';
-            if (txt.includes(UNREGISTERED.wording)) {
-              matchedStatus = UNREGISTERED.status;
-            } else {
-              for (let [key, status] of Object.entries(statuses)) {
-                if (txt.includes(key)) {
-                  matchedStatus = status;
-                  break;
+          try {
+            const results = await Promise.all(premintStatuses);
+            const draft = createDraft(settings);
+            for (let { url, txt } of results) {
+              let matchedStatus = 'unknown';
+              if (txt.includes(UNREGISTERED.wording)) {
+                matchedStatus = UNREGISTERED.status;
+              } else {
+                for (let [key, status] of Object.entries(statuses)) {
+                  if (txt.includes(key)) {
+                    matchedStatus = status;
+                    break;
+                  }
                 }
               }
-            }
-            draft.raffles[raffleWallet][url].status = matchedStatus;
-            draft.raffles[raffleWallet][url].updated_at = Date.now();
+              draft.raffles[raffleWallet][url].status = matchedStatus;
+              draft.raffles[raffleWallet][url].updated_at = Date.now();
 
-            if (autoDeleteLost && matchedStatus === 'lost') {
-              delete draft.raffles[raffleWallet][url];
+              if (autoDeleteLost && matchedStatus === 'lost') {
+                delete draft.raffles[raffleWallet][url];
+              }
             }
+
+            const newSettings = finishDraft(draft);
+            setStorage({ settings: newSettings });
+          } catch (err) {
+            // failed to fetch, probably during sleep or network issue, fail silently
           }
-
-          const newSettings = finishDraft(draft);
-          setStorage({ settings: newSettings });
         }
       });
     }

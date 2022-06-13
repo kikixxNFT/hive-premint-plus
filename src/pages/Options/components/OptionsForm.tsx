@@ -17,6 +17,7 @@ import {
   Title,
   ScrollArea,
   ActionIcon,
+  JsonInput,
 } from '@mantine/core';
 import { useSyncedStorageAtom } from '@utils/createSyncedStorageAtom';
 import produce from 'immer';
@@ -34,6 +35,10 @@ type FormValues = {
 export function OptionsForm() {
   const [settings, setSettings] = useSyncedStorageAtom();
   const [opened, setOpened] = useState(false);
+  const [settingsModalOpened, setSettingsModalOpened] = useState(false);
+  const [importedSettings, setImportedSettings] = useState(
+    JSON.stringify(settings)
+  );
   const [isImporting, setIsImporting] = useState(false);
   const {
     wallet,
@@ -80,6 +85,16 @@ export function OptionsForm() {
     });
   }
 
+  function handleSettingsImport() {
+    try {
+      const newSettings = JSON.parse(importedSettings);
+      setSettings(newSettings);
+      setSettingsModalOpened(false);
+    } catch (e) {
+      // error with JSON, let field validation pick it up
+    }
+  }
+
   async function handleImport() {
     setIsImporting(true);
     const premintDoc = document.createElement('div');
@@ -90,6 +105,9 @@ export function OptionsForm() {
     premintDoc.innerHTML = await res.text();
     let updated = false;
     const newSettings = produce(settings, (draft) => {
+      if (!draft.hasOwnProperty('raffles')) {
+        draft.raffles = {};
+      }
       if (!draft.raffles.hasOwnProperty(selectedwallet)) {
         draft.raffles[selectedwallet] = {};
       }
@@ -131,7 +149,7 @@ export function OptionsForm() {
       >
         <TextInput
           disabled
-          label="Hive Alpha Wallet"
+          label="Pass Wallet"
           placeholder="0x..."
           radius="md"
           value={wallet}
@@ -247,6 +265,10 @@ export function OptionsForm() {
           Auto import previous raffles
         </Button>
 
+        <Button variant="outline" onClick={() => setSettingsModalOpened(true)}>
+          Export/Import Settings
+        </Button>
+
         <Group position="right" mt="md">
           <Button color="grape" type="submit">
             {isSubmitting ? 'Saving...' : 'Save'}
@@ -297,6 +319,50 @@ export function OptionsForm() {
               type="button"
               onClick={handleImport}
             >
+              {isImporting ? 'Importing...' : 'Import'}
+            </Button>
+          </Group>
+        </Box>
+      </Modal>
+      <Modal
+        centered
+        opened={settingsModalOpened}
+        onClose={() => setSettingsModalOpened(false)}
+        title={<Text sx={{ fontWeight: 700 }}>Premint+ settings</Text>}
+        styles={{
+          modal: {
+            border: `1px solid ${
+              colorScheme === 'dark'
+                ? theme.colors.dark[0]
+                : theme.colors.dark[7]
+            }`,
+          },
+        }}
+      >
+        <Box sx={{ display: 'grid', gap: '16px' }}>
+          <Text>
+            Copy this text and store locally to be able to import again later,
+            or import onto a new machine!
+          </Text>
+          <JsonInput
+            label="Premint+ settings"
+            validationError="Invalid json - cannot import"
+            formatOnBlur
+            autosize
+            minRows={4}
+            maxRows={15}
+            value={importedSettings}
+            onChange={setImportedSettings}
+          />
+          <Group position="right" mt="md">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setSettingsModalOpened(false)}
+            >
+              {'Cancel'}
+            </Button>
+            <Button color="grape" type="button" onClick={handleSettingsImport}>
               {isImporting ? 'Importing...' : 'Import'}
             </Button>
           </Group>
