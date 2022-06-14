@@ -13,7 +13,6 @@ export type RaffleData = {
   raffle_time?: string;
   twitter_link?: string;
   discord_link?: string;
-  auto_registered?: boolean;
 };
 export type Settings = {
   colorScheme: ColorScheme;

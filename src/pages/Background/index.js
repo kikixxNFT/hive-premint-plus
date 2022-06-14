@@ -11,6 +11,10 @@ const provider = new ethers.providers.JsonRpcProvider(rpc);
 const contractInstance = new ethers.Contract(contractAddress, abi, provider);
 let registering = false;
 
+function delay(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 async function hasPasses({ address }) {
   const foundersPasses = await contractInstance.balanceOf(address, 1);
   const alphaPasses = await contractInstance.balanceOf(address, 2);
@@ -53,7 +57,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 target: { tabId: tab.id },
                 func: () => {
                   return new Promise((resolve) => {
-                    const observer = new MutationObserver(function (
+                    const observer = new MutationObserver(async function (
                       mutations,
                       mutationInstance
                     ) {
@@ -61,6 +65,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         '[data-testid="confirmationSheetConfirm"]'
                       );
                       if (follow) {
+                        await delay(1000);
                         follow?.click();
                         mutationInstance.disconnect();
                         resolve();
