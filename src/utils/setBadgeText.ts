@@ -9,7 +9,7 @@ export const setBadgeText = ({
   selectedWallet: number;
   wallet: string;
 }) => {
-  if (selectedWallet) {
+  if (selectedWallet !== undefined) {
     const won =
       raffles?.[wallet] &&
       Object.entries(raffles[wallet]).filter(
