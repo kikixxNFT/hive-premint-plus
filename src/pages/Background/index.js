@@ -4,11 +4,24 @@ import { RateLimit } from 'async-sema';
 import { setBadgeText } from '@utils/setBadgeText';
 import { ethers, BigNumber } from 'ethers';
 import { abi, contractAddress, rpc } from '@assets/hive-alpha';
-import { clearStorage, getStorage, setStorage } from './storage';
+import { clearStorage, getStorage, INITIAL_VALUE, setStorage } from './storage';
 
 const limit = RateLimit(2);
 const provider = new ethers.providers.JsonRpcProvider(rpc);
 const contractInstance = new ethers.Contract(contractAddress, abi, provider);
+const endpoint = 'https://hive-alpha-toolkit.vercel.app/api/graphql';
+const headers = {
+  'content-type': 'application/json',
+};
+const graphqlQuery = {
+  operationName: 'CreateRaffle',
+  query: `mutation CreateRaffle($url: String!, $name: String!, $officialLink: String, $registrationCloses: String, $mintDate: String, $mintPrice: String, $raffleTime: String, $twitterLink: String, $discordLink: String) {
+        createRaffle(url: $url, name: $name, official_link: $officialLink, registration_closes: $registrationCloses, mint_date: $mintDate, mint_price: $mintPrice, raffle_time: $raffleTime, twitter_link: $twitterLink, discord_link: $discordLink) {
+          id
+        }
+      }`,
+};
+
 let registering = false;
 
 function delay(time) {
@@ -107,6 +120,7 @@ chrome.runtime.onInstalled.addListener((reason) => {
     chrome.tabs.create({
       url: '/options.html',
     });
+    setStorage({ settings: INITIAL_VALUE });
   }
 });
 
@@ -114,7 +128,13 @@ chrome.alarms.create('poll-premint', { periodInMinutes: 1 });
 
 chrome.alarms.onAlarm.addListener(() => {
   getStorage().then((settings) => {
-    const { raffles, wallet, interval, autoDeleteLost } = settings;
+    const {
+      raffles,
+      wallet,
+      interval,
+      autoDeleteLost,
+      sendPremintRafflesToDapp,
+    } = settings;
     if (!wallet) return;
 
     if (!hasPasses({ address: wallet })) {
@@ -124,9 +144,41 @@ chrome.alarms.onAlarm.addListener(() => {
       setStorage({ settings: newSettings });
     } else {
       Object.entries(raffles).forEach(async ([raffleWallet, raffle]) => {
+        const unpublishedRaffles = Object.entries(raffle).filter(
+          ([, data]) => !data?.published
+        );
         const updatedRaffles = Object.entries(raffle).filter(
           ([, data]) => Date.now() - data?.updated_at >= interval * 60 * 1000
         );
+        const draft = createDraft(settings);
+        if (unpublishedRaffles.length > 0 && sendPremintRafflesToDapp) {
+          const unpublishedMutations = unpublishedRaffles.map(
+            async ([url, raffle]) => {
+              graphqlQuery.variables = {
+                url,
+                name: raffle?.name,
+                officialLink: raffle?.official_link,
+                registrationCloses: raffle?.registration_closes,
+                mintDate: raffle?.mint_date,
+                mintPrice: raffle?.mint_price,
+                raffleTime: raffle?.raffle_time,
+                twitterLink: raffle?.twitter_link,
+                discordLink: raffle?.discord_link,
+              };
+              const options = {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(graphqlQuery),
+              };
+              await fetch(endpoint, options);
+              return { url };
+            }
+          );
+          const results = await Promise.all(unpublishedMutations);
+          for (const { url } of results) {
+            draft.raffles[raffleWallet][url].published = true;
+          }
+        }
         if (updatedRaffles.length > 0) {
           const premintStatuses = updatedRaffles.map(async ([url]) => {
             await limit();
@@ -139,7 +191,6 @@ chrome.alarms.onAlarm.addListener(() => {
           });
           try {
             const results = await Promise.all(premintStatuses);
-            const draft = createDraft(settings);
             for (let { url, txt } of results) {
               let matchedStatus = 'unknown';
               if (txt.includes(UNREGISTERED.wording)) {
@@ -159,12 +210,13 @@ chrome.alarms.onAlarm.addListener(() => {
                 delete draft.raffles[raffleWallet][url];
               }
             }
-
-            const newSettings = finishDraft(draft);
-            setStorage({ settings: newSettings });
           } catch (err) {
             // failed to fetch, probably during sleep or network issue, fail silently
           }
+        }
+        const newSettings = finishDraft(draft);
+        if (newSettings !== settings) {
+          setStorage({ settings: newSettings });
         }
       });
     }

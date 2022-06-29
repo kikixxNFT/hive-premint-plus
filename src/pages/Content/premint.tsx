@@ -27,14 +27,13 @@ function GetPremintData({ settings }: { settings: Settings }) {
   const url = `${window.location.origin}/${
     window.location.pathname.split('/')[1]
   }`;
-  const { wallets, selectedWallet = 0 } = settings;
+  const { autoWatchOnRegister, wallets, selectedWallet = 0 } = settings;
   const wallet = wallets?.[selectedWallet]?.wallet || '';
-  const status = settings?.raffles[wallet]?.[url]?.status;
+  const status = settings?.raffles?.[wallet]?.[url]?.status;
   const { data, isError } = useGetPremintStatus({
     url,
     wallet,
   });
-  const { autoWatchOnRegister } = settings;
   const registerButton = window?.document?.querySelector(
     'button[name="registration-form-submit"]'
   );
@@ -69,12 +68,11 @@ function GetPremintData({ settings }: { settings: Settings }) {
   }
 
   useEffect(() => {
-    if (data?.status && settings?.raffles?.[wallet].hasOwnProperty(url)) {
+    if (data?.status && settings?.raffles?.[wallet]?.hasOwnProperty(url)) {
       const infoDivs =
         window?.document
           ?.querySelector('.container .row div:nth-child(3)')
           ?.querySelectorAll('div:not(.text-uppercase)') || [];
-      let updated = false;
       const newSettings = produce(settings, (draft) => {
         if (draft.raffles[wallet][url].status !== data?.status) {
           draft.raffles[wallet][url] = {
@@ -82,7 +80,6 @@ function GetPremintData({ settings }: { settings: Settings }) {
             status: data?.status,
             updated_at: Date.now(),
           };
-          updated = true;
         }
         for (let info of Array.from(infoDivs)) {
           const [cardTitle, cardValue] = (info as HTMLElement).innerText.split(
@@ -93,39 +90,34 @@ function GetPremintData({ settings }: { settings: Settings }) {
             draft.raffles[wallet][url].official_link !== cardValue.trim()
           ) {
             draft.raffles[wallet][url].official_link = cardValue.trim();
-            updated = true;
           }
           if (
             cardTitle === 'REGISTRATION CLOSES' &&
             draft.raffles[wallet][url].registration_closes !== cardValue.trim()
           ) {
             draft.raffles[wallet][url].registration_closes = cardValue.trim();
-            updated = true;
           }
           if (
             cardTitle === 'MINT DATE' &&
             draft.raffles[wallet][url].mint_date !== cardValue.trim()
           ) {
             draft.raffles[wallet][url].mint_date = cardValue.trim();
-            updated = true;
           }
           if (
             cardTitle === 'MINT PRICE' &&
             draft.raffles[wallet][url].mint_price !== cardValue.trim()
           ) {
             draft.raffles[wallet][url].mint_price = cardValue.trim();
-            updated = true;
           }
           if (
             cardTitle === 'RAFFLE TIME' &&
             draft.raffles[wallet][url].raffle_time !== cardValue.trim()
           ) {
             draft.raffles[wallet][url].raffle_time = cardValue.trim();
-            updated = true;
           }
         }
       });
-      if (updated) {
+      if (newSettings !== settings) {
         chrome.runtime.sendMessage({
           setSettings: true,
           settings: newSettings,
@@ -204,7 +196,7 @@ function GetPremintData({ settings }: { settings: Settings }) {
   }
 
   if (autoWatchOnRegister) {
-    registerButton?.addEventListener('mouseup', handleAdd);
+    registerButton?.addEventListener('click', handleAdd);
   }
 
   return (

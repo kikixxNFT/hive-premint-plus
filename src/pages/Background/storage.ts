@@ -13,6 +13,7 @@ export type RaffleData = {
   raffle_time?: string;
   twitter_link?: string;
   discord_link?: string;
+  published?: boolean;
 };
 export type Settings = {
   colorScheme: ColorScheme;
@@ -24,6 +25,7 @@ export type Settings = {
   autoDeleteLost?: boolean;
   autoWatchOnRegister?: boolean;
   autoOpenRegistrationLinks?: boolean;
+  sendPremintRafflesToDapp?: boolean;
   raffles: {
     [wallet: string]: {
       [url: string]: RaffleData;
@@ -41,6 +43,7 @@ export const INITIAL_VALUE: Settings = {
   autoDeleteLost: false,
   autoWatchOnRegister: false,
   autoOpenRegistrationLinks: false,
+  sendPremintRafflesToDapp: true,
   raffles: {},
   isLoading: true,
 };
@@ -55,7 +58,7 @@ const DB_CONFIG = {
 localForage.config(DB_CONFIG);
 
 export function setStorage({ settings }: { settings: Settings }) {
-  if (settings) {
+  if (Object.keys(settings).length > 0) {
     localForage.setItem(SETTINGS_KEY, settings, (err, data) => {
       chrome.tabs.query({ url: '*://*.premint.xyz/*' }, function (tabs) {
         tabs.forEach(function (tab) {

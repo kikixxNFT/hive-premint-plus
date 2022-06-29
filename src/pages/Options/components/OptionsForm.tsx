@@ -30,6 +30,7 @@ type FormValues = {
   autoDeleteLost: boolean;
   autoWatchOnRegister: boolean;
   autoOpenRegistrationLinks: boolean;
+  sendPremintRafflesToDapp: boolean;
 };
 
 export function OptionsForm() {
@@ -47,6 +48,7 @@ export function OptionsForm() {
     autoDeleteLost,
     autoWatchOnRegister,
     autoOpenRegistrationLinks,
+    sendPremintRafflesToDapp = true,
     colorScheme,
     selectedWallet: previousSelectedWallet = 0,
   } = settings;
@@ -60,6 +62,7 @@ export function OptionsForm() {
       autoDeleteLost,
       autoWatchOnRegister,
       autoOpenRegistrationLinks,
+      sendPremintRafflesToDapp,
     },
   });
   const { fields, append, remove } = useFieldArray({
@@ -70,7 +73,11 @@ export function OptionsForm() {
   const { errors, isSubmitting } = formState;
 
   async function onSubmit(values: FormValues) {
-    setSettings({ ...settings, ...values });
+    const { raffles } = settings;
+    for (const wallet of values.wallets) {
+      raffles[wallet.wallet] = {};
+    }
+    setSettings({ ...settings, ...values, raffles: { ...raffles } });
     showNotification({
       id: 'saved-data',
       title: 'Success!',
@@ -257,8 +264,13 @@ export function OptionsForm() {
         />
         <Switch
           color="grape"
-          label="Automatically open Discord and follow Twitter when adding to watchlist"
+          label="Add 'Open Social Links' button to automatically follow Twitter, and open Discord invites"
           {...register('autoOpenRegistrationLinks')}
+        />
+        <Switch
+          color="grape"
+          label="Help decentralize public raffles by sending them to the toolkit"
+          {...register('sendPremintRafflesToDapp')}
         />
 
         <Button variant="outline" onClick={() => setOpened(true)}>

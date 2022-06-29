@@ -12,7 +12,7 @@ const atomWithSyncedSyncStorage = <Settings>(
         getSettings: true,
       },
       (response) => {
-        if (response) {
+        if (response?.settings) {
           setValue({ ...response.settings, isLoading: false });
         } else {
           setValue((prev) => ({ ...prev, isLoading: false }));
